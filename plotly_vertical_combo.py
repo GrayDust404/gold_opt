@@ -68,7 +68,7 @@ def get_option_fig(df, title):
         title=title,
         xaxis=dict(title="数值", side="bottom"),
         yaxis=dict(
-            title="现货价（3200-4000）",
+            title=f"现货价（{PRICE_MIN}-{PRICE_MAX}）",
             tickmode="array",
             tickvals=price_ticks,
             ticktext=[str(p) for p in price_ticks],
@@ -157,7 +157,7 @@ fig.add_trace(go.Scatter(
 ), row=1, col=2)
 
 fig.update_yaxes(
-    title_text="现货价（3200-4000）",
+    title_text=f"现货价（{PRICE_MIN}-{PRICE_MAX}）",
     tickmode="array",
     tickvals=call_price_ticks,
     ticktext=[str(p) for p in call_price_ticks],
@@ -165,7 +165,7 @@ fig.update_yaxes(
     row=1, col=1
 )
 fig.update_yaxes(
-    title_text="现货价（3200-4000）",
+    title_text=f"现货价（{PRICE_MIN}-{PRICE_MAX}）",
     tickmode="array",
     tickvals=put_price_ticks,
     ticktext=[str(p) for p in put_price_ticks],
