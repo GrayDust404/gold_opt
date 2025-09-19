@@ -148,11 +148,40 @@ fig.update_layout(
     title_text="看涨/看跌期权 存量-变量同图（横向，plotly）"
 )
 
-fig.write_html("plotly_横向存量变量同图_all.html")
-print("plotly交互图已生成：plotly_横向存量变量同图_all.html")
-
 # call_df和put_df已处理好
 call_df["Strike"] = pd.to_numeric(call_df["Strike"], errors="coerce")
 put_df["Strike"] = pd.to_numeric(put_df["Strike"], errors="coerce")
 max_pain_strike, max_pain_value = calc_max_pain(call_df, put_df)
 print(f"最大痛苦价值对应行权价: {max_pain_strike}, 最大痛苦价值: {max_pain_value}")
+
+# 在两个子图上添加最大痛苦价值的线
+max_pain_y = max_pain_strike - FUTURE_SPOT_DIFF
+call_xmin, call_xmax = call_df["变量值"].min(), call_df["变量值"].max()
+put_xmin, put_xmax = put_df["变量值"].min(), put_df["变量值"].max()
+
+fig.add_shape(
+    type="line",
+    x0=call_xmin, x1=call_xmax,
+    y0=max_pain_y, y1=max_pain_y,
+    xref="x", yref="y",
+    line=dict(color="purple", width=2, dash="dash"),
+    row=1, col=1
+)
+fig.add_shape(
+    type="line",
+    x0=put_xmin, x1=put_xmax,
+    y0=max_pain_y, y1=max_pain_y,
+    xref="x2", yref="y2",
+    line=dict(color="purple", width=2, dash="dash"),
+    row=1, col=2
+)
+fig.add_trace(go.Scatter(
+    x=[None], y=[None],
+    mode="lines",
+    line=dict(color="purple", width=2, dash="dash"),
+    name="最大痛苦价值"
+), row=1, col=1)
+
+fig.write_html("plotly_横向存量变量同图_all.html")
+print("plotly交互图已生成：plotly_横向存量变量同图_all.html")
+
