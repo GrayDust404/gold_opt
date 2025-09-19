@@ -6,6 +6,41 @@ FUTURE_SPOT_DIFF = 33
 PRICE_MIN = 3400
 PRICE_MAX = 3800
 
+def extract_call_put_df(filepath):
+    # 读取整个VOI Details Report sheet
+    df = pd.read_excel(filepath, sheet_name=0, header=None)
+    # 找到 American Options 行
+    opt_type_idx = df[df[0] == "OPTION TYPE: American Options"].index[0]
+    # 主力合约名在下一行
+    main_contract = df.iloc[opt_type_idx + 1, 0]
+    # 提取主力合约名（如"OCT 25"）
+    contract_prefix = main_contract.split(" Calls")[0].split(" Puts")[0].strip()
+    call_tag = f"{contract_prefix} Calls"
+    put_tag = f"{contract_prefix} Puts"
+
+    # 找到call表头行
+    call_header_idx = df[df[0] == call_tag].index[0] + 1
+    # 找到call TOTALS行
+    call_totals_idx = df[(df[0].astype(str).str.startswith("TOTALS")) & (df.index > call_header_idx)].index[0]
+    # 提取call数据（包含表头和TOTALS行）
+    call_table = df.iloc[call_header_idx:call_totals_idx+1, :]
+    call_table.columns = call_table.iloc[0]
+    call_table = call_table[1:]  # 去掉表头行
+
+    # 找到put表头行
+    put_header_idx = df[df[0] == put_tag].index[0] + 1
+    # 找到put TOTALS行
+    put_totals_idx = df[(df[0].astype(str).str.startswith("TOTALS")) & (df.index > put_header_idx)].index[0]
+    # 提取put数据（包含表头和TOTALS行）
+    put_table = df.iloc[put_header_idx:put_totals_idx+1, :]
+    put_table.columns = put_table.iloc[0]
+    put_table = put_table[1:]  # 去掉表头行
+
+    # 重置索引
+    call_table = call_table.reset_index(drop=True)
+    put_table = put_table.reset_index(drop=True)
+    return call_table, put_table, contract_prefix
+
 def get_option_fig(df, title):
     df["现货价"] = pd.to_numeric(df["Strike"], errors="coerce") - FUTURE_SPOT_DIFF
     df["变量值"] = pd.to_numeric(df["Change"], errors="coerce")
@@ -65,9 +100,8 @@ def calc_max_pain(call_df, put_df):
             min_strike = s
     return min_strike, min_pain
 
-# 读取数据
-call_df = pd.read_excel("VoiDetailsForProduct.xls", sheet_name="call")
-put_df = pd.read_excel("VoiDetailsForProduct.xls", sheet_name="put")
+# 读取数据（自动提取call/put数据和合约名）
+call_df, put_df, contract_name = extract_call_put_df("VoiDetailsForProduct.xls")
 
 # 创建子图
 fig = make_subplots(
@@ -147,7 +181,7 @@ fig.update_layout(
     margin=dict(l=100, r=40, t=100, b=80),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     showlegend=True,
-    title_text="看涨/看跌期权 存量-变量同图"
+    title_text=f"{contract_name} 看涨/看跌期权 存量-变量同图"
 )
 
 # call_df和put_df已处理好
