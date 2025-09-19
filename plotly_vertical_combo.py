@@ -192,8 +192,8 @@ print(f"最大痛苦价值对应行权价: {max_pain_strike}, 最大痛苦价值
 
 # 在两个子图上添加最大痛苦价值的线
 max_pain_y = max_pain_strike - FUTURE_SPOT_DIFF
-call_xmin, call_xmax = call_df["变量值"].min(), call_df["变量值"].max()
-put_xmin, put_xmax = put_df["变量值"].min(), put_df["变量值"].max()
+call_xmin, call_xmax = call_df["存量值"].min(), call_df["存量值"].max()
+put_xmin, put_xmax = put_df["存量值"].min(), put_df["存量值"].max()
 
 fig.add_shape(
     type="line",
