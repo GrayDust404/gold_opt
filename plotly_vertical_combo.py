@@ -44,15 +44,34 @@ def get_option_fig(df, title):
     )
     return fig
 
+def calc_max_pain(call_df, put_df):
+    """
+    计算最大痛苦价值（Max Pain）及其对应的行权价
+    """
+    strikes = sorted(set(call_df["Strike"]).intersection(set(put_df["Strike"])))
+    min_pain = None
+    min_strike = None
+
+    for s in strikes:
+        # Call持仓损失：max(0, s - 行权价) * 持仓量
+        call_loss = ((s - call_df["Strike"]).clip(lower=0) * call_df["存量值"]).sum()
+        # Put持仓损失：max(0, 行权价 - s) * 持仓量
+        put_loss = ((put_df["Strike"] - s).clip(lower=0) * put_df["存量值"]).sum()
+        total_loss = call_loss + put_loss
+        if (min_pain is None) or (total_loss < min_pain):
+            min_pain = total_loss
+            min_strike = s
+    return min_strike, min_pain
+
 # 读取数据
 call_df = pd.read_excel("VoiDetailsForProduct.xls", sheet_name="call")
 put_df = pd.read_excel("VoiDetailsForProduct.xls", sheet_name="put")
 
 # 创建子图
 fig = make_subplots(
-    rows=2, cols=1,
-    shared_xaxes=False,
-    subplot_titles=("看涨期权 存量-变量同图（纵向，plotly）", "看跌期权 存量-变量同图（纵向，plotly）")
+    rows=1, cols=2,
+    shared_yaxes=False,
+    subplot_titles=("看涨期权 存量-变量同图（横向，plotly）", "看跌期权 存量-变量同图（横向，plotly）")
 )
 
 # call
@@ -92,14 +111,14 @@ fig.add_trace(go.Bar(
     orientation="h",
     name="变量值(put)",
     marker_color=put_df["变量值"].apply(lambda v: "#2196F3" if v >= 0 else "#F44336")
-), row=2, col=1)
+), row=1, col=2)
 fig.add_trace(go.Scatter(
     y=put_df["现货价"],
     x=put_df["存量值"],
     mode="lines+markers",
     name="存量值(put)",
     line=dict(color="#FF9800", width=2)
-), row=2, col=1)
+), row=1, col=2)
 
 fig.update_yaxes(
     title_text="现货价（3200-4000）",
@@ -115,19 +134,25 @@ fig.update_yaxes(
     tickvals=put_price_ticks,
     ticktext=[str(p) for p in put_price_ticks],
     tickfont=dict(size=10),
-    row=2, col=1
+    row=1, col=2
 )
 fig.update_xaxes(title_text="数值", row=1, col=1)
-fig.update_xaxes(title_text="数值", row=2, col=1)
+fig.update_xaxes(title_text="数值", row=1, col=2)
 
 fig.update_layout(
-    height=4000,
-    width=700,
+    height=2000,
+    width=1400,
     margin=dict(l=100, r=40, t=100, b=80),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     showlegend=True,
-    title_text="看涨/看跌期权 存量-变量同图（纵向，plotly）"
+    title_text="看涨/看跌期权 存量-变量同图（横向，plotly）"
 )
 
-fig.write_html("plotly_纵向存量变量同图_all.html")
-print("plotly交互图已生成：plotly_纵向存量变量同图_all.html")
+fig.write_html("plotly_横向存量变量同图_all.html")
+print("plotly交互图已生成：plotly_横向存量变量同图_all.html")
+
+# call_df和put_df已处理好
+call_df["Strike"] = pd.to_numeric(call_df["Strike"], errors="coerce")
+put_df["Strike"] = pd.to_numeric(put_df["Strike"], errors="coerce")
+max_pain_strike, max_pain_value = calc_max_pain(call_df, put_df)
+print(f"最大痛苦价值对应行权价: {max_pain_strike}, 最大痛苦价值: {max_pain_value}")
