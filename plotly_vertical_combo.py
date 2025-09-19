@@ -3,13 +3,15 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 FUTURE_SPOT_DIFF = 33
+PRICE_MIN = 3400
+PRICE_MAX = 3800
 
 def get_option_fig(df, title):
     df["现货价"] = pd.to_numeric(df["Strike"], errors="coerce") - FUTURE_SPOT_DIFF
     df["变量值"] = pd.to_numeric(df["Change"], errors="coerce")
     df["存量值"] = pd.to_numeric(df["At Close"].astype(str).str.replace(",", ""), errors="coerce")
     df = df.dropna(subset=["现货价", "变量值", "存量值"])
-    df = df[(df["现货价"] >= 3200) & (df["现货价"] <= 4000)].sort_values("现货价")
+    df = df[(df["现货价"] >= PRICE_MIN) & (df["现货价"] <= PRICE_MAX)].sort_values("现货价")
     price_ticks = df["现货价"].astype(int).tolist()
 
     fig = go.Figure()
@@ -71,7 +73,7 @@ put_df = pd.read_excel("VoiDetailsForProduct.xls", sheet_name="put")
 fig = make_subplots(
     rows=1, cols=2,
     shared_yaxes=False,
-    subplot_titles=("看涨期权 存量-变量同图（横向，plotly）", "看跌期权 存量-变量同图（横向，plotly）")
+    subplot_titles=("看涨期权 存量-变量同图", "看跌期权 存量-变量同图")
 )
 
 # call
@@ -79,7 +81,7 @@ call_df["现货价"] = pd.to_numeric(call_df["Strike"], errors="coerce") - FUTUR
 call_df["变量值"] = pd.to_numeric(call_df["Change"], errors="coerce")
 call_df["存量值"] = pd.to_numeric(call_df["At Close"].astype(str).str.replace(",", ""), errors="coerce")
 call_df = call_df.dropna(subset=["现货价", "变量值", "存量值"])
-call_df = call_df[(call_df["现货价"] >= 3200) & (call_df["现货价"] <= 4000)].sort_values("现货价")
+call_df = call_df[(call_df["现货价"] >= PRICE_MIN) & (call_df["现货价"] <= PRICE_MAX)].sort_values("现货价")
 call_price_ticks = call_df["现货价"].astype(int).tolist()
 
 fig.add_trace(go.Bar(
@@ -102,7 +104,7 @@ put_df["现货价"] = pd.to_numeric(put_df["Strike"], errors="coerce") - FUTURE_
 put_df["变量值"] = pd.to_numeric(put_df["Change"], errors="coerce")
 put_df["存量值"] = pd.to_numeric(put_df["At Close"].astype(str).str.replace(",", ""), errors="coerce")
 put_df = put_df.dropna(subset=["现货价", "变量值", "存量值"])
-put_df = put_df[(put_df["现货价"] >= 3200) & (put_df["现货价"] <= 4000)].sort_values("现货价")
+put_df = put_df[(put_df["现货价"] >= PRICE_MIN) & (put_df["现货价"] <= PRICE_MAX)].sort_values("现货价")
 put_price_ticks = put_df["现货价"].astype(int).tolist()
 
 fig.add_trace(go.Bar(
@@ -140,12 +142,12 @@ fig.update_xaxes(title_text="数值", row=1, col=1)
 fig.update_xaxes(title_text="数值", row=1, col=2)
 
 fig.update_layout(
-    height=2000,
+    height=1400,
     width=1400,
     margin=dict(l=100, r=40, t=100, b=80),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     showlegend=True,
-    title_text="看涨/看跌期权 存量-变量同图（横向，plotly）"
+    title_text="看涨/看跌期权 存量-变量同图"
 )
 
 # call_df和put_df已处理好
