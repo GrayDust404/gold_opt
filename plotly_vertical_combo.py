@@ -107,7 +107,7 @@ call_df, put_df, contract_name = extract_call_put_df("VoiDetailsForProduct.xls")
 fig = make_subplots(
     rows=1, cols=2,
     shared_yaxes=False,
-    subplot_titles=("看涨期权 存量-变量同图", "看跌期权 存量-变量同图")
+    subplot_titles=("看涨期权", "看跌期权")
 )
 
 # call
@@ -181,7 +181,7 @@ fig.update_layout(
     margin=dict(l=100, r=40, t=100, b=80),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     showlegend=True,
-    title_text=f"{contract_name} 看涨/看跌期权 存量-变量同图"
+    title_text=f"{contract_name} 看涨/看跌期权"
 )
 
 # call_df和put_df已处理好
@@ -218,6 +218,6 @@ fig.add_trace(go.Scatter(
     name="最大痛苦价值"
 ), row=1, col=1)
 
-fig.write_html("plotly_横向存量变量同图_all.html")
-print("plotly交互图已生成：plotly_横向存量变量同图_all.html")
+fig.write_html("CME Group黄金期权概况.html")
+print("plotly交互图已生成: CME Group黄金期权概况.html")
 
