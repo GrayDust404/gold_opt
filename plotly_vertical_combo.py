@@ -4,7 +4,7 @@ from plotly.subplots import make_subplots
 import argparse
 
 FUTURE_SPOT_DIFF = 0  # 期货-现货的价差
-PRICE_MIN = 2005
+PRICE_MIN = 3250
 PRICE_MAX = 4250
 
 def extract_call_put_df(filepath, contract_name=None):
@@ -80,22 +80,22 @@ if __name__ == "__main__":
     call_df, put_df, contract_name = extract_call_put_df("VoiDetailsForProduct.xls", contract_name=args.contract)
 
     # call
-    call_df["现货价"] = pd.to_numeric(call_df["Strike"], errors="coerce") - FUTURE_SPOT_DIFF
+    call_df["价格"] = pd.to_numeric(call_df["Strike"], errors="coerce") - FUTURE_SPOT_DIFF
     call_df["变量值"] = pd.to_numeric(call_df["Change"], errors="coerce")
     call_df["存量值"] = pd.to_numeric(call_df["At Close"].astype(str).str.replace(",", ""), errors="coerce")
-    call_df = call_df.dropna(subset=["现货价", "变量值", "存量值"])
+    call_df = call_df.dropna(subset=["价格", "变量值", "存量值"])
 
     # put
-    put_df["现货价"] = pd.to_numeric(put_df["Strike"], errors="coerce") - FUTURE_SPOT_DIFF
+    put_df["价格"] = pd.to_numeric(put_df["Strike"], errors="coerce") - FUTURE_SPOT_DIFF
     put_df["变量值"] = pd.to_numeric(put_df["Change"], errors="coerce")
     put_df["存量值"] = pd.to_numeric(put_df["At Close"].astype(str).str.replace(",", ""), errors="coerce")
-    put_df = put_df.dropna(subset=["现货价", "变量值", "存量值"])
+    put_df = put_df.dropna(subset=["价格", "变量值", "存量值"])
 
     # call_df和put_df已处理好
     call_df["Strike"] = pd.to_numeric(call_df["Strike"], errors="coerce")
     put_df["Strike"] = pd.to_numeric(put_df["Strike"], errors="coerce")
     max_pain_strike, max_pain_value = calc_max_pain(call_df, put_df)
-    print(f"最大痛苦价值对应行权价: {max_pain_strike}, 最大痛苦价值: {max_pain_value}")
+    print(f"最大痛苦价值对应行权价: {max_pain_strike}")
 
     # 创建子图
     fig = make_subplots(
@@ -104,36 +104,36 @@ if __name__ == "__main__":
         subplot_titles=("看涨期权", "看跌期权")
     )
 
-    call_df = call_df[(call_df["现货价"] >= PRICE_MIN) & (call_df["现货价"] <= PRICE_MAX)].sort_values("现货价")
-    call_price_ticks = call_df["现货价"].astype(int).tolist()
+    call_df = call_df[(call_df["价格"] >= PRICE_MIN) & (call_df["价格"] <= PRICE_MAX)].sort_values("价格")
+    call_price_ticks = call_df["价格"].astype(int).tolist()
 
     fig.add_trace(go.Bar(
-        y=call_df["现货价"],
+        y=call_df["价格"],
         x=call_df["变量值"],
         orientation="h",
         name="变量值(call)",
         marker_color=call_df["变量值"].apply(lambda v: "#2196F3" if v >= 0 else "#F44336")
     ), row=1, col=1)
     fig.add_trace(go.Scatter(
-        y=call_df["现货价"],
+        y=call_df["价格"],
         x=call_df["存量值"],
         mode="lines+markers",
         name="存量值(call)",
         line=dict(color="#FF9800", width=2)
     ), row=1, col=1)
 
-    put_df = put_df[(put_df["现货价"] >= PRICE_MIN) & (put_df["现货价"] <= PRICE_MAX)].sort_values("现货价")
-    put_price_ticks = put_df["现货价"].astype(int).tolist()
+    put_df = put_df[(put_df["价格"] >= PRICE_MIN) & (put_df["价格"] <= PRICE_MAX)].sort_values("价格")
+    put_price_ticks = put_df["价格"].astype(int).tolist()
 
     fig.add_trace(go.Bar(
-        y=put_df["现货价"],
+        y=put_df["价格"],
         x=put_df["变量值"],
         orientation="h",
         name="变量值(put)",
         marker_color=put_df["变量值"].apply(lambda v: "#2196F3" if v >= 0 else "#F44336")
     ), row=1, col=2)
     fig.add_trace(go.Scatter(
-        y=put_df["现货价"],
+        y=put_df["价格"],
         x=put_df["存量值"],
         mode="lines+markers",
         name="存量值(put)",
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     ), row=1, col=2)
 
     fig.update_yaxes(
-        title_text=f"现货价（{PRICE_MIN}-{PRICE_MAX}）",
+        title_text=f"价格（{PRICE_MIN}-{PRICE_MAX}）",
         tickmode="array",
         tickvals=call_price_ticks,
         ticktext=[str(p) for p in call_price_ticks],
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         row=1, col=1
     )
     fig.update_yaxes(
-        title_text=f"现货价（{PRICE_MIN}-{PRICE_MAX}）",
+        title_text=f"价格（{PRICE_MIN}-{PRICE_MAX}）",
         tickmode="array",
         tickvals=put_price_ticks,
         ticktext=[str(p) for p in put_price_ticks],
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     fig.update_xaxes(title_text="数值", row=1, col=2)
 
     fig.update_layout(
-        height=4000,
+        height=(PRICE_MAX - PRICE_MIN)*2,
         width=1400,
         margin=dict(l=100, r=40, t=100, b=80),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
